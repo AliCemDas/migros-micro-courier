@@ -1,0 +1,13 @@
+spring:
+  application:
+    name: discovery-service
+
+server:
+  port: 8761  # Eureka server default portudur, değiştirebilirsiniz.
+
+eureka:
+  client:
+    register-with-eureka: false  # Kendisi register olmaz.
+    fetch-registry: false        # Kendisi registry'i çekmez.
+  server:
+    wait-time-in-ms-when-sync-empty: 0

@@ -1,0 +1,4 @@
+server:
+  port: 8888
+custom:
+  message: "Merhaba, bu config dosyasından geliyor!"

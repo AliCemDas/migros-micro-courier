@@ -1,0 +1,143 @@
+services:
+  zipkin:
+    image: openzipkin/zipkin
+    container_name: zipkin
+    ports:
+      - "9411:9411"
+    environment:
+      - STORAGE_TYPE=mem  # İstersen kalıcı depolama için Elasticsearch destekleyebilirsin
+    networks:
+      - micro-net
+  postgres-db:
+    image: postgres:15-alpine
+    container_name: migros-micro-db
+    environment:
+      POSTGRES_USER: acemdas
+      POSTGRES_PASSWORD: migros
+      POSTGRES_DB: migros-micro-db
+    networks:
+      - micro-net
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/init:/docker-entrypoint-initdb.d
+  courier-service:
+    build:
+      context: ../
+      dockerfile: deployment/dockerfiles/courier-service.Dockerfile
+    ports:
+      - "8081:8081"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+    depends_on:
+      - discovery-service
+      - config-service
+      - zipkin
+      - postgres-db
+    networks:
+      - micro-net
+  store-service:
+    build:
+      context: ../
+      dockerfile: deployment/dockerfiles/store-service.Dockerfile
+    ports:
+      - "8082:8082"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+    depends_on:
+      - discovery-service
+      - config-service
+      - zipkin
+      - postgres-db
+    networks:
+      - micro-net
+  auth-service:
+    build:
+      context: ../
+      dockerfile: deployment/dockerfiles/auth-service.Dockerfile
+    ports:
+      - "8085:8085"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+    depends_on:
+      - discovery-service
+      - config-service
+      - zipkin
+      - postgres-db
+    networks:
+      - micro-net
+  config-service:
+    build:
+      context: ../
+      dockerfile: deployment/dockerfiles/config-service.Dockerfile
+    ports:
+      - "8888:8888"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+    depends_on:
+      - discovery-service
+      - zipkin
+      - postgres-db
+    networks:
+      - micro-net
+  discovery-service:
+    build:
+      context: ../
+      dockerfile: deployment/dockerfiles/discovery-service.Dockerfile
+    ports:
+      - "8761:8761"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+    networks:
+      - micro-net
+  gateway-service:
+    build:
+      context: ../
+      dockerfile: deployment/dockerfiles/gateway-service.Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+    depends_on:
+      - discovery-service
+      - config-service
+      - zipkin
+      - postgres-db
+    networks:
+      - micro-net
+  location-service:
+    build:
+      context: ../
+      dockerfile: deployment/dockerfiles/location-service.Dockerfile
+    ports:
+      - "8084:8084"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+    depends_on:
+      - discovery-service
+      - config-service
+      - zipkin
+      - postgres-db
+    networks:
+      - micro-net
+  log-service:
+    build:
+      context: ../
+      dockerfile: deployment/dockerfiles/log-service.Dockerfile
+    ports:
+      - "8083:8083"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+    depends_on:
+      - discovery-service
+      - config-service
+      - zipkin
+      - postgres-db
+    networks:
+      - micro-net
+
+networks:
+  micro-net:
+volumes:
+  postgres_data:
